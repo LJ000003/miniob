@@ -159,6 +159,23 @@ RC Db::create_table(const char *table_name, span<const AttrInfoSqlNode> attribut
   return RC::SUCCESS;
 }
 
+RC Db::drop_table(const char *table_name)
+{
+  // check table_name
+  if (opened_tables_.count(table_name) == 0) {
+    LOG_WARN("%s has been opened before.", table_name);
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
+
+  // 删除文件
+  string  table_file_path = table_meta_file(path_.c_str(), table_name);
+  Table  *table           = find_table(table_name);
+  table->drop(table_file_path.c_str());
+ 
+  opened_tables_.erase(table_name);
+  return RC::SUCCESS;
+}
+
 Table *Db::find_table(const char *table_name) const
 {
   unordered_map<string, Table *>::const_iterator iter = opened_tables_.find(table_name);
